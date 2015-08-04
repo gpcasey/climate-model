@@ -2,6 +2,7 @@ __user__ = 'Greg'
 __project__ = 'Checking'
 
 import math
+from decimal import Decimal
 
 # Constants
 ALPHA = .3
@@ -102,7 +103,7 @@ class Individual:
         if age < self._age_middle:
             return 0
         elif age < self._age_old:
-            if round(wage * (1 - (self._tau_u * self._nu + self._tau_s * self._ns)), 4) < round((cm + price * ca), 4):
+            if Decimal(wage * (1 - (self._tau_u * self._nu + self._tau_s * self._ns))) < Decimal((cm + price * ca)):
                 return float("-inf")
             elif max(self._ns, self._nu) <= 0:
                 return float("-inf")
@@ -110,7 +111,7 @@ class Individual:
                 return (self._alpha * math.log(cm) + self._beta * math.log(ca - self._ctilde)
                         + (1 - self._alpha - self._beta) * math.log(omegau * self._nu + omegas * self._ns))
         elif age >= self._age_old and age <= self._age_max:
-            if round(wage, 4) < round((cm + price * ca), 4):
+            if Decimal(wage) < Decimal(cm + price * ca):
                 return float("-inf")
             else:
                 return self._alpha * math.log(cm) + self._beta * math.log(ca - self._ctilde)
@@ -178,7 +179,7 @@ class Individual:
                 utils = sum([new_indiv.utility(wages[i], prices[i], new_indiv.get_consumption(wages[i], prices[i])[0],
                                           new_indiv.get_consumption(wages[i], prices[i])[1], omegau, omegas)
                              for i in range(len(prices))])
-                print nlow, nhigh, utils
+                #print nlow, nhigh, utils
                 if utils > best:
                     final_n = (nlow, nhigh)
                     best = utils

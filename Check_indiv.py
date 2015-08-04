@@ -1,7 +1,7 @@
 __author__ = 'Greg'
 import model
 import math
-
+from decimal import Decimal
 # Constants
 TOLW = .02
 NVECTOR = [n / 100.0 for n in range(0, 1000)]
@@ -124,30 +124,52 @@ def check_maximize():
                                   .15, 1.3 * .15, 0,
                                   1, 2, 2)
 
+
+    # Single Period Tests, no ctilde
     test_indiv.update_age(test_indiv._age_middle)
     answer_low, answer_high = test_indiv.maximize_n([2], [1], 4, 1, .75, .05)
     if (not (round(answer_low, 2), round(answer_high, 2))
-        == (round(.3 / .15, 4), 0)):
+        == (round(.3 / .15, 2), 0)):
         print "MAX1", (round(answer_low, 2), round(answer_high, 2))
         # note: 1 period case. only low skill.
 
     answer_low, answer_high = test_indiv.maximize_n([2], [1], 1, 4, .75, .05)
     if (not (round(answer_low, 2), round(answer_high, 2))
-        == (0, round(.3 / (1.3 * .15), 2))):
-        print "MAX2", (round(answer_low, 2), round(answer_high, 2))
-        # note: 1 period case. only high skill.
+        == (0, round(.3 / (.15*1.3), 2))):
+        print "MAX2", (round(answer_low, 2), round(answer_high, 2)), (0, round(.3 / (.15*1.3), 2))
+        # note: 1 period case. only low skill.
 
     answer_low, answer_high = test_indiv.maximize_n([2], [1], 2 * test_indiv._tau_u, 2 * test_indiv._tau_s + .01, .75, .05)
+    low = (.3 / (.15 + .15*1.3*.75))
+    high = .75 * low
+    if (not (Decimal(answer_low), Decimal(answer_high))
+        == (Decimal(low), Decimal(high))):
+        print "MAX3", (Decimal(answer_low), Decimal(answer_high)), (Decimal(low), Decimal(high))
+        # note: 1 period case. both skills.
+
+
+    # Multi-Period Tests, no ctilde
+    answer_low, answer_high = test_indiv.maximize_n([2, 4], [1, .5], 4, 1, .75, .05)
     if (not (round(answer_low, 2), round(answer_high, 2))
-        == (0, round(.3 / (1.3 * .15), 2))):
-        print "MAX3", (round(answer_low, 2), round(answer_high, 2))
-        # note: 1 period case. only both skills.
-    '''
-    test_indiv.update_n(.01, 0)
-    cm, ca =  test_indiv.get_consumption(2, 1)
-    print cm, ca
-    print test_indiv.utility(2, 1, cm, ca, 4, 1)
-    '''
+        == (round(.3 / .15, 4), 0)):
+        print "MAX4", (round(answer_low, 2), round(answer_high, 2))
+        # note: 1 period case. only low skill.
+
+    answer_low, answer_high = test_indiv.maximize_n([2, 12], [.5, 1], 1, 4, .75, .05)
+    if (not (round(answer_low, 2), round(answer_high, 2))
+        == (0, round(.3 / (.15*1.3), 2))):
+        print "MAX5", (round(answer_low, 2), round(answer_high, 2)), (0, round(.3 / (.15*1.3), 2))
+        # note: 1 period case. only low skill.
+
+    answer_low, answer_high = test_indiv.maximize_n([4, 7], [1, 3], 2 * test_indiv._tau_u, 2 * test_indiv._tau_s + .01, .75, .05)
+    low = (.3 / (.15 + .15*1.3*.75))
+    high = .75 * low
+    if (not (Decimal(answer_low), Decimal(answer_high))
+        == (Decimal(low), Decimal(high))):
+        print "MAX6", (Decimal(answer_low), Decimal(answer_high)), (Decimal(low), Decimal(high))
+        # note: 1 period case. both skills.
+
+
 
 print "****************CHECK SMALL*****************"
 check_small_indiv()
