@@ -1,7 +1,7 @@
 __author__ = 'Greg'
 import model
 import math
-from decimal import Decimal
+
 # Constants
 TOLW = .02
 NVECTOR = [n / 100.0 for n in range(0, 1000)]
@@ -139,7 +139,7 @@ def check_maximize():
     if (not (round(answer_low, 2), round(answer_high, 2))
         == (0, round(.3 / (.15*1.3), 2))):
         print "MAX2", (round(answer_low, 2), round(answer_high, 2)), (0, round(.3 / (.15*1.3), 2))
-        # note: 1 period case. only low skill.
+        # note: 1 period case. only high skill.
 
     answer_low, answer_high = test_indiv.maximize_n([2], [1], 2 * test_indiv._tau_u, 2 * test_indiv._tau_s + .01, .75, .05)
     low = (.3 / (.15 + .15*1.3*.75))
@@ -161,7 +161,7 @@ def check_maximize():
     if (not (round(answer_low, 2), round(answer_high, 2))
         == (0, round(.3 / (.15*1.3), 2))):
         print "MAX5", (round(answer_low, 2), round(answer_high, 2)), (0, round(.3 / (.15*1.3), 2))
-        # note: 1 period case. only low skill.
+        # note: 1 period case. only high skill.
 
     answer_low, answer_high = test_indiv.maximize_n([4, 7], [1, 3], 2 * test_indiv._tau_u, 2 * test_indiv._tau_s - .01, .75, .05)
     low = (.3 / (.15 + .15*1.3*.75))
