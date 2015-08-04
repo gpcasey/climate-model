@@ -22,6 +22,8 @@ def check_small_indiv():
     test_indiv.update_age(40)
     if not test_indiv.get_age() == 40:
         print "SMALL2", test_indiv.get_age()
+    if not test_indiv.get_gamma() == (.15 * 2 + 1.3 * .15 * 1):
+        print "SMALL2B", test_indiv.get_gamma()
 
     test_indivB = test_indiv.copy()
     if not test_indivB.get_n() == (2, 1):
@@ -142,9 +144,9 @@ def check_maximize():
     answer_low, answer_high = test_indiv.maximize_n([2], [1], 2 * test_indiv._tau_u, 2 * test_indiv._tau_s + .01, .75, .05)
     low = (.3 / (.15 + .15*1.3*.75))
     high = .75 * low
-    if (not (Decimal(answer_low), Decimal(answer_high))
-        == (Decimal(low), Decimal(high))):
-        print "MAX3", (Decimal(answer_low), Decimal(answer_high)), (Decimal(low), Decimal(high))
+    if (not (round(answer_low, 2), round(answer_high, 2))
+        == (round(low, 2), round(high, 2))):
+        print "MAX3", (round(answer_low, 2), round(answer_high, 2)), (round(low, 2), round(high, 2))
         # note: 1 period case. both skills.
 
 
@@ -161,14 +163,39 @@ def check_maximize():
         print "MAX5", (round(answer_low, 2), round(answer_high, 2)), (0, round(.3 / (.15*1.3), 2))
         # note: 1 period case. only low skill.
 
-    answer_low, answer_high = test_indiv.maximize_n([4, 7], [1, 3], 2 * test_indiv._tau_u, 2 * test_indiv._tau_s + .01, .75, .05)
+    answer_low, answer_high = test_indiv.maximize_n([4, 7], [1, 3], 2 * test_indiv._tau_u, 2 * test_indiv._tau_s - .01, .75, .05)
     low = (.3 / (.15 + .15*1.3*.75))
     high = .75 * low
-    if (not (Decimal(answer_low), Decimal(answer_high))
-        == (Decimal(low), Decimal(high))):
-        print "MAX6", (Decimal(answer_low), Decimal(answer_high)), (Decimal(low), Decimal(high))
+    if (not (round(answer_low, 2), round(answer_high, 2))
+        == (round(low, 2), round(high, 2))):
+        print "MAX6", (round(answer_low, 2), round(answer_high, 2)), (low, high)
         # note: 1 period case. both skills.
 
+    # with CTILDE
+    test_indiv = model.Individual("L", .4, .4,
+                                  2, 4, 1,
+                                  1, 2, 2)
+    test_indiv.update_age(test_indiv._age_middle)
+    answer_low, answer_high = test_indiv.maximize_n([10], [1], 2, 3, .75, .05)
+    if not (answer_high == 0) and (answer_low < (.2 / 2)):
+        print "MAX7", answer_low, answer_high
+        #with ctilde, check that gamma < 1 - alpha - beta
+
+    answer_low, answer_high = test_indiv.maximize_n([2], [1], 2, 10, .75, .05)
+    if not ((answer_high < .2 / 4) and (answer_low ==0)):
+        print "MAX8", answer_low, answer_high
+        #with ctilde, check that gamma < 1 - alpha - beta
+
+    answer_lowB, answer_highB = test_indiv.maximize_n([1.5], [1], 2, 10, .75, .05)
+    if not ((answer_highB < .1 / 4) and (answer_lowB ==0) and (answer_highB < answer_high)):
+        print "MAX9", answer_lowB, answer_highB
+        #test wealth effect.
+
+
+    answer_low, answer_high = test_indiv.maximize_n([2], [1], 1, 2, .75, .05)
+    if not ((answer_high < .2 / 4) and (answer_low < .2 / 2) and (answer_high + answer_low < .2)):
+        print "MAX10", answer_low, answer_high
+        #with ctilde, test both
 
 
 print "****************CHECK SMALL*****************"

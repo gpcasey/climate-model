@@ -2,7 +2,6 @@ __user__ = 'Greg'
 __project__ = 'Checking'
 
 import math
-from decimal import Decimal
 
 # Constants
 ALPHA = .3
@@ -15,7 +14,7 @@ TOLW = .02
 AGE_MIDDLE = 1
 AGE_OLD = 2
 AGE_MAX = 2
-NVECTOR = [n / 100.0 for n in range(0, 1000)]
+NVECTOR = [n / 500.0 for n in range(0, 1200)]
 
 
 class Firm:
@@ -23,26 +22,71 @@ class Firm:
     Describes behavior of aggregate firm.
     """
 
-    def __init__(self, Hm, Lm, La, Aa, Am, epsilon=EPSILON):
+    def __init__(self, Hm, Lm, La, Am, Aa, epsilon=EPSILON):
         """
         Initialize firm.
         """
         self._epsilon = epsilon
+        self._Hm = Hm
+        self._Lm = Lm
+        self._La = La
+        self._Aa = Aa
+        self._Am = Am
         self._Ya = Aa * La
-        self._Ym = Am * Hm ^ self._epsilon * La ^ (1 - self._epsilon)
-        self._wu = Am * (1 - self._epsilon) * Hm ^ self._epsilon * Lm ^ (-1 * self._epsilon)
-        self._wh = Am * self._epsilon * Hm ^ (self._epsilon - 1) * Lm ^ (1 - self._epsilon)
-        self._pa = Aa / self._wu
+        self._Ym = Am * Hm ** self._epsilon * Lm ** (1 - self._epsilon)
+        self._wu = Am * (1 - self._epsilon) * Hm ** self._epsilon * Lm ** (-1 * self._epsilon)
+        self._ws = Am * self._epsilon * Hm ** (self._epsilon - 1) * Lm ** (1 - self._epsilon)
+        self._pa = self._wu / self._Aa
+        self._Yt = self._Ym + self._pa * self._Ya
 
-    def update(self, Hm, Lm, La, Aa, Am):
+    def update(self, Hm, Lm, La, Am, Aa):
         """
         Update production based on new inputs.
         """
+        self._Hm = Hm
+        self._Lm = Lm
+        self._La = La
+        self._Aa = Aa
+        self._Am = Am
         self._Ya = Aa * La
-        self._Ym = Am * Hm ^ self._epsilon * La ^ (1 - self._epsilon)
-        self._wu = Am * (1 - self._epsilon) * Hm ^ self._epsilon * Lm ^ (-1 * self._epsilon)
-        self._wh = Am * self._epsilon * Hm ^ (self._epsilon - 1) * Lm ^ (1 - self._epsilon)
-        self._pa = Aa / self._wu
+        self._Ym = Am * Hm ** self._epsilon * Lm ** (1 - self._epsilon)
+        self._wu = Am * (1 - self._epsilon) * Hm ** self._epsilon * Lm ** (-1 * self._epsilon)
+        self._ws = self._epsilon * Am * (Hm ** (self._epsilon - 1)) * (Lm ** (1 - self._epsilon))
+        self._pa = self._wu / self._Aa
+        self._Yt = self._Ym + self._pa * self._Ya
+
+    def get_labor(self):
+        """
+        return labor aggregates.
+        """
+        return self._Hm, self._Lm, self._La
+
+    def get_tech(self):
+        """
+        return tech levels
+        """
+        return self._Am, self._Aa
+
+    def get_prices(self):
+        """
+        return prices and wages.
+        """
+        return self._ws, self._wu, self._pa
+
+    def get_output(self):
+        """
+        Return output by sector and total.
+        """
+        return self._Yt, self._Ym, self._Ya
+
+    def copy(self):
+        """
+        Make a copy of the firm.
+        """
+        new_firm = Firm(self._Hm, self._Lm, self._La, self._Am, self._Aa, self._epsilon)
+        return new_firm
+
+
 
 
 class Individual:
@@ -103,7 +147,7 @@ class Individual:
         if age < self._age_middle:
             return 0
         elif age < self._age_old:
-            if Decimal(wage * (1 - (self._tau_u * self._nu + self._tau_s * self._ns))) < Decimal((cm + price * ca)):
+            if (wage * (1 - (self._tau_u * self._nu + self._tau_s * self._ns))) < ((cm + price * ca) - .001): #adjustment for floating point.
                 return float("-inf")
             elif max(self._ns, self._nu) <= 0:
                 return float("-inf")
@@ -111,7 +155,7 @@ class Individual:
                 return (self._alpha * math.log(cm) + self._beta * math.log(ca - self._ctilde)
                         + (1 - self._alpha - self._beta) * math.log(omegau * self._nu + omegas * self._ns))
         elif age >= self._age_old and age <= self._age_max:
-            if Decimal(wage) < Decimal(cm + price * ca):
+            if wage < cm + price * ca - .001:
                 return float("-inf")
             else:
                 return self._alpha * math.log(cm) + self._beta * math.log(ca - self._ctilde)
@@ -139,9 +183,14 @@ class Individual:
             c_a = (wage * working_time - c_m) / price
             return c_m, c_a
 
+    def get_gamma(self):
+        return self._ns * self._tau_s + self._nu * self._tau_u
+
     def maximize_n(self, wages, prices, omegau, omegas, last_ratio, tolw=TOLW, nvector=NVECTOR):
         """
         Choose maximum number of children.
+        First check taus against omega.
+        With both types of children, keep ratio from last iteration.
         :type self: object
         """
         new_indiv = self.copy()
@@ -179,14 +228,15 @@ class Individual:
                 utils = sum([new_indiv.utility(wages[i], prices[i], new_indiv.get_consumption(wages[i], prices[i])[0],
                                           new_indiv.get_consumption(wages[i], prices[i])[1], omegau, omegas)
                              for i in range(len(prices))])
-                #print nlow, nhigh, utils
                 if utils > best:
                     final_n = (nlow, nhigh)
                     best = utils
         else:
             assert False, "No condition met"
+
         assert final_n[0] >= 0 and final_n[1] >= 0
         assert max(final_n) > 0
+        assert max(final_n) != max(nvector)
 
         return final_n
 
